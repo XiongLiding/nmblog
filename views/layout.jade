@@ -1,0 +1,32 @@
+doctype 5
+html
+  head
+    meta(charset='utf-8')
+    title= pageTitle + ' - ' + CONFIG.TITLE
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    link(rel='stylesheet', href='/prettify/prettify.css')
+    | <!--[if lt IE 9]>
+    | <script>
+    | var e = ("abbr,article,aside,audio,canvas,datalist,details," +
+    |     "figure,footer,header,hgroup,mark,menu,meter,nav,output," +
+    |     "progress,section,time,video").split(',');
+    | for (var i = 0; i < e.length; i++) {
+    |   document.createElement(e[i]);
+    | }
+    | </script>
+    | <![endif]-->
+
+  body
+    header#header
+      hgroup
+        h1
+          a(href='/')= CONFIG.TITLE
+        h2= CONFIG.SUBTITLE
+
+    section#main
+      block content
+
+    footer#footer © 2012 #{CONFIG.TITLE}
+    script(type="text/javascript", src="/javascripts/jquery-1.7.2.min.js")
+    script(type="text/javascript", src="/prettify/prettify.js")
+    script(type="text/javascript", src="/javascripts/index.js")
