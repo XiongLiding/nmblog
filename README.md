@@ -1,4 +1,4 @@
-Node-Markup-Blog
-================
+Node-Markdown-Blog
+==================
 
-A blog system develop with node, and write with markup language like markdown.
+A blog system develop with node, and write with markdown.
