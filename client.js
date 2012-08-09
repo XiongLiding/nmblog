@@ -30,9 +30,11 @@ app.locals({
 });
 
 var routes = require('./routes')(app);
+app.get('/test', routes.test);
 app.get('/:article', routes.preview);
-app.get('/attachments/:attachment', routes.attachmentReferer);
-app.get('/:article/attachments/:attachment', routes.attachmentDirect);
+app.get('/article/:article/:format', routes.article);
+app.get('/article/:article/attachments/:attachment', routes.attachment);
+app.post('/put/:article', routes.put);
 
 var http = require('http');
 http.createServer(app).listen(app.get('port'), function() {

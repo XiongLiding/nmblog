@@ -18,6 +18,10 @@ Node-Markdown-Blog
 
 要建立另一篇日志，只需在 article 目录下建立一个新的目录，如 `another-article`，并在该目录下新建一个名为 article.markdown 的文件——也可以使用 .md 或 .mdown 等其他后缀。
 
-编辑并保存 article.markdown 文件，用浏览器访问 `http://127.0.0.1:3000/nmblog` 预览效果。
+编辑并保存 article.markdown 文件，用浏览器访问 `http://127.0.0.1:3000/another-article` 预览效果。
 
 ## 部署到服务器 ##
+
+![what](what)
+
+![whatattachment](attachments/what)
