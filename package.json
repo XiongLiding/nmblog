@@ -13,6 +13,8 @@
     "send": "*",
     "async": "*",
     "needle": "*",
-    "mime": "*"
+    "mime": "*",
+    "mongodb": "*",
+    "mount-collections": "*"
   }
 }

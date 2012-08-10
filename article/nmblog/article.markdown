@@ -22,6 +22,6 @@ Node-Markdown-Blog
 
 ## 部署到服务器 ##
 
-![what](what)
+[what](what)
 
-![whatattachment](attachments/what)
+[what attachment](attachments/what)
