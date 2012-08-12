@@ -15,13 +15,12 @@ var mime = require('mime');
 var async = require('async');
 var needle = require('needle');
 
-var config = {
-  DIR_ATTACHMENT: 'attachments',
-  FILE_CONFIG: 'config.js',
-};
+var config = {};
+config.DIR_ATTACHMENT = 'attachments';
+config.DIR_PUBLIC_ATTACHMENT = path.join('public', config.DIR_ATTACHMENT);
+config.FILE_CONFIG = 'config.js';
 
-
-module.exports = function (app) {
+module.exports = function (app, db) {
 
   /**
     getArticle
@@ -179,7 +178,7 @@ module.exports = function (app) {
 
       // 剔除临时文件和隐藏文件，把文件名转换成绝对路径
       files = files.filter(function (file) {
-        return !(/~$|^./.test(file));
+        return !(/~$|^\./.test(file));
       }).map(function (file) {
         return path.join(dir, file);
       });
@@ -211,7 +210,7 @@ module.exports = function (app) {
       if (err) {
         return fn(err);
       }
-      getAttachments('nmblog', function (err, attachments) {
+      getAttachments(article, function (err, attachments) {
         if (err) {
           return fn(err);
         }
@@ -228,6 +227,7 @@ module.exports = function (app) {
     });
   };
 
+  // 把文章连同附件从客户端发送到服务端
   routes.post = function (req, res) {
     var article = req.params.article;
     getArticle(article, function (err, content) {
@@ -236,9 +236,11 @@ module.exports = function (app) {
       }
 
       var data = {};
-      data.content = content.replace(/\[([^\]]*)]\(attachments\/([^\)]*)\)/g, '[$1](/attachments/' + article + '/$2)')
+      // 把 markdown 中对附件的引用路径改为相对站点根目录
+      content = content.replace(/\[([^\]]*)]\(attachments\/([^\)]*)\)/g, '[$1](/attachments/' + article + '/$2)')
+      data.content = new Buffer(content, 'utf-8').toString('binary');
 
-      getAttachments(article, function (err, content) {
+      getAttachments(article, function (err, files) {
         for (var i = 0; i < files.length; i++) {
           data[path.basename(files[i])] = {
             file: files[i],
@@ -246,14 +248,68 @@ module.exports = function (app) {
           }
         }
 
-        needle.post(app.get('CONFIG').SERVER + '/listenPost/' + req.params.article, data, {multipart: true}, function (err, resp, body) {
-        });
+        needle.post('http://' + app.get('CONFIG').SERVER + '/listenPost/' + req.params.article, data, {multipart: true});
       });
     });
   };
 
+  function replaceAttachmentOf(article) {
+    return function (file, fn) {
+      console.log(file);
+      var filePath = path.join(app.get('public_attachments'), article, file.name);
+      console.log(filePath);
+      fs.unlink(filePath, function (err) {
+        if (err && err.errno !== 34) {
+          return fn(err);
+        }
+        fs.rename(file.path, filePath, function (err) {
+          if (err) {
+            return fn(err);
+          }
+          return fn(null);
+        });
+      });
+    }
+  }
+
+  // 服务端接收来自客户端的文章和相关附件
   routes.listenPost = function (req, res) {
-    console.log(req.body.content, req.files);
+    var article = req.params.article;
+    if (!req.body.content) {
+      return res.end();
+    }
+
+    var files = [];
+    for (var i in req.files) {
+      files.push(req.files[i]);
+    }
+
+    debugger
+
+    var replaceAttachment = replaceAttachmentOf(article);
+    async.parallel([
+        // 把收到的 markdown 存入数据库
+        function (callback) {
+          db.article.insert({
+            id: article,
+            content: req.body.content,
+            timestamp: (new Date()).getTime()
+          }, callback);
+        },
+        // 把收到的文件存到附件目录
+        function (callback) {
+          fs.mkdir(path.join(app.get('public_attachments'), article), '0777', function (err) {
+            if (err && err.errno !== 47) {
+              return callback(err);
+            }
+            async.forEach(files, replaceAttachment, callback);
+          });
+        }
+      ], function (err) {
+        console.log(err);
+        res.end();
+      }
+    );
   };
 
   routes.get = function (req, res) {

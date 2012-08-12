@@ -12,13 +12,15 @@ app.configure(function(){
   app.set('port', process.env.PORT || 3000);
   app.set('views', __dirname + '/views');
   app.set('article', __dirname + '/article')
+  app.set('public', __dirname + '/public');
+  app.set('public_attachments', app.get('public') + '/attachments');
   app.set('view engine', 'jade');
   app.use(express.favicon());
   app.use(express.bodyParser());
   app.use(express.methodOverride());
   app.use(app.router);
-  app.use(require('less-middleware')({ src: __dirname + '/public' }));
-  app.use(express.static(__dirname + '/public'));
+  app.use(require('less-middleware')({ src: app.get('public') }));
+  app.use(express.static(app.get('public')));
 });
 
 app.configure('development', function(){
